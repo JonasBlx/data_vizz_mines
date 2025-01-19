@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,28 +12,31 @@ data = pd.read_csv("data.csv")  # Remplacez "data.csv" par le nom de votre fichi
 st.title("Analyse des Mots-Clés et Clusters des Publications")
 
 cluster_title_mapping = {
-    0: 'Stability and Random Disturbance',
-    1: 'IT Solutions and Operations',
-    2: 'Supply Chain and Risk Management',
-    3: 'Project Success and Process Design',
-    4: 'Resilience Evaluation',
-    5: 'Performance Analysis and Traceability',
-    6: 'Risk Management and Modelling',
-    7: 'Smart Cities and Virtual Worlds',
-    8: 'AI and Decision Support Systems',
-    9: 'Knowledge Management',
-    10: 'Healthcare and Patient Pathways',
-    11: 'Service and Maintenance Scheduling',
-    12: 'Social Networks and Collaboration',
-    13: 'Logistics and Last-Mile Delivery',
-    14: 'Strategic Planning and Decentralized Management',
-    15: 'Emergency and Disaster Technologies',
-    16: 'Nonlinear Systems and Experimental Design',
-    17: 'Business Modeling and Simulation',
-    18: 'Uncertainty and Robustness Optimization',
-    19: 'Constraint Modeling and Optimization',
-    20: 'Optimization and Evolutionary Algorithms'
+    'Cluster 0': 'Stability and Random Disturbance',
+    'Cluster 1': 'IT Solutions and Operations',
+    'Cluster 2': 'Supply Chain and Risk Management',
+    'Cluster 3': 'Project Success and Process Design',
+    'Cluster 4': 'Resilience Evaluation',
+    'Cluster 5': 'Performance Analysis and Traceability',
+    'Cluster 6': 'Risk Management and Modelling',
+    'Cluster 7': 'Smart Cities and Virtual Worlds',
+    'Cluster 8': 'AI and Decision Support Systems',
+    'Cluster 9': 'Knowledge Management',
+    'Cluster 10': 'Healthcare and Patient Pathways',
+    'Cluster 11': 'Service and Maintenance Scheduling',
+    'Cluster 12': 'Social Networks and Collaboration',
+    'Cluster 13': 'Logistics and Last-Mile Delivery',
+    'Cluster 14': 'Strategic Planning and Decentralized Management',
+    'Cluster 15': 'Emergency and Disaster Technologies',
+    'Cluster 16': 'Nonlinear Systems and Experimental Design',
+    'Cluster 17': 'Business Modeling and Simulation',
+    'Cluster 18': 'Uncertainty and Robustness Optimization',
+    'Cluster 19': 'Constraint Modeling and Optimization',
+    'Cluster 20': 'Optimization and Evolutionary Algorithms'
 }
+
+
+
 # Affichage des premières lignes des données
 st.header("Aperçu des Données")
 st.dataframe(data.head())
@@ -80,18 +82,37 @@ st.pyplot(fig)
 # Analyse des Clusters
 st.header("Analyse des Clusters")
 cluster_counts = data['Paper Cluster'].value_counts()
+cluster_counts.rename(index=cluster_title_mapping, inplace=True)
 
-# Répartition des clusters
+# Répartition des clusters (avec regroupement des petits clusters)
+st.subheader("Répartition des Clusters (Diagramme Circulaire)")
+threshold = 0.04  # Seuil de 4 %
+total_count = cluster_counts.sum()
+cluster_counts_filtered = cluster_counts[cluster_counts / total_count >= threshold]
+others_count = cluster_counts[cluster_counts / total_count < threshold].sum()
+
+# Ajout de la catégorie "Autres" si nécessaire
+if others_count > 0:
+    cluster_counts_filtered['Autres'] = others_count
+
+# Palette de couleurs distinctes pour le diagramme circulaire
+colors = plt.cm.tab20.colors  # Une palette avec 20 couleurs distinctes
+
+# Création du diagramme circulaire avec les clusters filtrés
+fig, ax = plt.subplots()
+ax.pie(cluster_counts_filtered, 
+       labels=cluster_counts_filtered.index, 
+       autopct='%1.1f%%', 
+       startangle=90, 
+       colors=colors[:len(cluster_counts_filtered)])  # Application des couleurs distinctes
+ax.axis('equal')  # Assure un cercle parfait
+st.pyplot(fig)
+
+
+# Répartition des clusters (Barres)
 st.subheader("Répartition des Clusters (Barres)")
 cluster_counts.rename(index=cluster_title_mapping, inplace=True)
 st.bar_chart(cluster_counts)
-
-# Répartition des clusters (Diagramme circulaire)
-st.subheader("Répartition des Clusters (Diagramme Circulaire)")
-fig, ax = plt.subplots()
-ax.pie(cluster_counts, labels=[cluster_title_mapping.get(i, i) for i in cluster_counts.index], autopct='%1.1f%%', startangle=90)
-ax.axis('equal')  # Assure un cercle parfait
-st.pyplot(fig)
 
 # Analyse des mots-clés par cluster
 st.subheader("Mots-Clés par Cluster")
