@@ -4,9 +4,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from wordcloud import WordCloud
 from collections import Counter
+import plotly.express as px  # Importer Plotly Express
 
 # Chargement des données (à remplacer par le chemin de votre fichier si nécessaire)
 data = pd.read_csv("data.csv")  # Remplacez "data.csv" par le nom de votre fichier
+
+st.subheader("Comment l'analyse des mots-clés, leur répartition et leur évolution permettent-elles de visualiser les dynamiques de recherche du CGI et d'orienter ses priorités stratégiques ?")
 
 # Titre de l'application
 st.title("Analyse des Mots-Clés et Clusters des Publications")
@@ -93,7 +96,7 @@ cluster_counts = data['Paper Cluster'].value_counts()
 cluster_counts.rename(index=cluster_title_mapping, inplace=True)
 
 # Répartition des clusters (avec regroupement des petits clusters)
-st.subheader("Répartition des Clusters (Diagramme Circulaire)")
+st.subheader("Répartition des Clusters")
 threshold = 0.04  # Seuil de 4 %
 total_count = cluster_counts.sum()
 cluster_counts_filtered = cluster_counts[cluster_counts / total_count >= threshold]
@@ -118,10 +121,42 @@ st.pyplot(fig)
 
 
 # Répartition des clusters (Barres)
-st.subheader("Répartition des Clusters (Barres)")
+st.subheader("Répartition des Clusters")
 cluster_counts.rename(index=cluster_title_mapping, inplace=True)
 st.bar_chart(cluster_counts)
 
 
 st.header("Liens entre Clusters")
 st.image("links.png", caption="Liens entre Clusters", use_column_width=True)
+
+# Charger les données pour l'évolution des mots-clés
+keywords_evolution_data = pd.read_csv("top_35_keywords_evolution_by_year.csv")
+
+# Afficher les données
+st.subheader("Évolution des Mots-Clés au Fil des Années")
+
+# Créer un sélecteur pour choisir plusieurs mots-clés
+keywords_list = keywords_evolution_data['Keyword'].tolist()  # Récupérer la liste des mots-clés
+selected_keywords = st.multiselect("Sélectionnez des Mots-Clés", keywords_list)
+
+# Préparer les données pour le graphique
+if selected_keywords:
+    # Filtrer les données pour les mots-clés sélectionnés
+    filtered_data = keywords_evolution_data[keywords_evolution_data['Keyword'].isin(selected_keywords)]
+
+    # Transformer les données pour le graphique
+    filtered_data_melted = filtered_data.melt(id_vars='Keyword', var_name='Year', value_name='Frequency')
+
+    # Créer un graphique interactif avec Plotly
+    fig = px.line(filtered_data_melted, 
+                  x='Year', 
+                  y='Frequency', 
+                  color='Keyword', 
+                  title='Évolution des Mots-Clés au Fil des Années',
+                  labels={'Frequency': 'Occurence', 'Year': 'Années'})
+
+    # Afficher le graphique dans Streamlit
+    st.plotly_chart(fig)
+else:
+    st.write("Veuillez sélectionner au moins un mot-clé.")
+
